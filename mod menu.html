@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mod Menu Fullscreen</title>
+    <style>
+        /* Khai báo biến toàn cục để quản lý kích thước chữ */
+        :root {
+            --menu-font-size: 16px;
+        }
+
+        /* Reset cơ bản */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            font-size: var(--menu-font-size);
+        }
+
+        body {
+            background-color: #000;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding-top: 0;
+        }
+
+        /* Khung Mod Menu */
+        .mod-menu {
+            width: 100%;
+            max-width: 800px;
+            background-color: #2b2b2b;
+            border: 2px solid #555;
+            box-shadow: 0 0 20px rgba(0,0,0,0.9);
+        }
+
+        /* --- HIỆU ỨNG CẦU VỒNG CHUYỂN ĐỘNG --- */
+        @keyframes rainbow-animation {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .rainbow-text {
+            background: linear-gradient(90deg, #ff5733, #ffbd33, #75ff33, #33e4ff, #333bff, #b833ff, #ff5733);
+            background-size: 300% 100%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: rainbow-animation 3s ease-in-out infinite;
+        }
+
+        /* Phần Header (Logo + Config) */
+        .header {
+            background-color: #000;
+            padding: 15px 10px;
+            text-align: center;
+            position: relative;
+            border-bottom: 2px solid #555;
+        }
+
+        .title-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .avatar-box {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 2px solid #fff;
+            background-color: #333;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        
+        .avatar-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .avatar-placeholder {
+            color: #fff;
+            font-weight: bold;
+            font-size: 1.25em;
+        }
+
+        .title-text {
+            font-size: 1.75em;
+            font-weight: 900;
+        }
+
+        .settings-icon {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #a0a0a0;
+            font-size: 1.75em; 
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+        .settings-icon:hover { 
+            color: #fff; 
+            transform: translateY(-50%) rotate(90deg);
+        }
+
+        .sub-title {
+            font-size: 0.875em;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+
+        /* Container các nút menu chính */
+        .menu-container {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Mỗi mục menu */
+        .menu-item {
+            border-bottom: 2px solid #222;
+        }
+
+        /* Nút bấm (Title của menu) */
+        .menu-btn {
+            width: 100%;
+            padding: 1.1em 0;
+            background-color: #9aa2a8;
+            color: #fff;
+            border: none;
+            font-size: 1.125em; 
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            transition: background 0.2s;
+        }
+
+        .menu-btn:hover {
+            background-color: #b0b8be;
+        }
+
+        .menu-btn .arrow {
+            font-size: 1em;
+            transition: transform 0.3s;
+        }
+
+        .menu-btn.active .arrow {
+            transform: rotate(180deg);
+        }
+
+        /* Phần nội dung trượt xuống */
+        .dropdown-content {
+            display: none;
+            background-color: #9aa2a8;
+            padding: 1.25em;
+            border-top: 2px solid #555;
+        }
+
+        .dropdown-content.show {
+            display: block;
+        }
+
+        /* Style cho các phần Checkbox chung */
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.75em;
+            font-weight: bold;
+            font-size: 1em;
+            cursor: pointer;
+        }
+        .checkbox-item input {
+            margin-right: 15px;
+            transform: scale(1.4);
+            cursor: pointer;
+        }
+
+        /* Style cho phần Spawn / Spell (Dropdown + Nút bấm) */
+        .select-group {
+            margin-bottom: 1.25em;
+        }
+        
+        .select-group select {
+            width: 100%;
+            padding: 0.75em;
+            border-radius: 6px;
+            border: 1px solid #555;
+            background: #eee;
+            font-weight: bold;
+            font-size: 1em;
+            cursor: pointer;
+            color: #000;
+        }
+        
+        .action-btn {
+            width: 100%;
+            padding: 0.875em;
+            background-color: #222;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-size: 1.125em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .action-btn:hover {
+            background-color: #000;
+        }
+
+        /* Style cho phần Gems (Slider) */
+        .slider-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .slider-group input[type="range"] {
+            width: 80%;
+            cursor: pointer;
+            accent-color: #222;
+        }
+
+        /* Nút TikTok */
+        .tiktok-btn {
+            display: block;
+            text-align: center;
+            padding: 1.1em 0;
+            background-color: #9aa2a8;
+            color: #fff;
+            font-size: 1.125em;
+            font-weight: bold;
+            text-decoration: none;
+            border-bottom: 2px solid #222;
+            transition: background 0.2s;
+        }
+        .tiktok-btn:hover {
+            background-color: #b0b8be;
+        }
+
+        /* --- PHẦN LETTER --- */
+        #letter-section {
+            display: none;
+            flex-direction: column;
+            background-color: #9aa2a8;
+            border-top: 2px solid #555;
+            border-bottom: 2px solid #222;
+        }
+        
+        #letter-section.show {
+            display: flex;
+        }
+
+        .letter-header {
+            display: flex;
+            justify-content: flex-end;
+            padding: 5px 15px;
+            background-color: #9aa2a8;
+        }
+
+        .close-btn {
+            background: #d32f2f;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            font-size: 1.125em;
+            font-weight: bold;
+            padding: 0.3em 0.75em;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .close-btn:hover {
+            background: #b71c1c;
+        }
+
+        .letter-content {
+            padding: 1.25em;
+            text-align: center;
+        }
+
+        .letter-title {
+            font-size: 1.5em;
+            font-weight: 900;
+            margin-bottom: 15px;
+        }
+
+        /* --- Footer --- */
+        .footer {
+            background-color: #000;
+            padding: 0.9em 1.25em;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 2px solid #555;
+        }
+
+        .footer-text {
+            font-size: 1em;
+            font-weight: 900;
+            cursor: default;
+        }
+    </style>
+</head>
+<body>
+
+<div class="mod-menu" id="modMenu">
+    <!-- Header -->
+    <div class="header">
+        <div class="title-wrapper">
+            <div class="avatar-box">
+                <img src="Anh.jpg" alt="Avatar" onerror="this.style.display='none'; document.getElementById('avatar-placeholder').style.display='flex';">
+                <div id="avatar-placeholder" class="avatar-placeholder" style="display: none;">A</div>
+            </div>
+            
+            <div class="title-text rainbow-text">Modded By MKgamer ⚙️</div>
+        </div>
+        
+        <div class="sub-title rainbow-text">MOD MENU V2 | SUBSCRIBE!</div>
+        
+        <div class="settings-icon" onclick="toggleLetterMode()">⚙</div>
+    </div>
+
+    <div id="main-menu-items" class="menu-container">
+        <!-- 1. Profile -->
+        <div class="menu-item">
+            <button class="menu-btn rainbow-text" onclick="toggleDropdown('profile-content')">
+                <span class="arrow">▽</span> PROFILE <span class="arrow">▽</span>
+            </button>
+            <div id="profile-content" class="dropdown-content">
+                <label class="checkbox-item rainbow-text"><input type="checkbox"> Free Shopping</label>
+                <label class="checkbox-item rainbow-text"><input type="checkbox"> Unlitimate Point Update</label>
+                <label class="checkbox-item rainbow-text"><input type="checkbox"> Max Update</label>
+                <label class="checkbox-item rainbow-text"><input type="checkbox"> Unlock all unit</label>
+                <label class="checkbox-item rainbow-text"><input type="checkbox"> Unlitimate Gems</label>
+                <label class="checkbox-item rainbow-text"><input type="checkbox"> Unlitimate Golds</label>
+            </div>
+        </div>
+
+        <!-- 2. Spawn -->
+        <div class="menu-item">
+            <button class="menu-btn rainbow-text" onclick="toggleDropdown('spawn-content')">
+                <span class="arrow">▽</span> SPAWN <span class="arrow">▽</span>
+            </button>
+            <div id="spawn-content" class="dropdown-content">
+                <div class="select-group">
+                    <select id="unit-select">
+                        <option value="SwordWrath">SwordWrath</option>
+                        <option value="Archidon">Archidon</option>
+                        <option value="Spearton">Spearton</option>
+                        <option value="Magikill">Magikill</option>
+                        <option value="Giant">Giant</option>
+                        <option value="Finalboss">Finalboss</option>
+                        <option value="Griffon the Great">Griffon the Great</option>
+                        <option value="Finall Boss the great">Finall Boss the great</option>
+                        <option value="Kai rider">Kai rider</option>
+                        <option value="Giant Stone">Giant Stone</option>
+                    </select>
+                </div>
+                <button class="action-btn rainbow-text">Spawn unit</button>
+            </div>
+        </div>
+
+        <!-- 3. Player -->
+        <div class="menu-item">
+            <button class="menu-btn rainbow-text" onclick="toggleDropdown('player-content')">
+                <span class="arrow">▽</span> PLAYER <span class="arrow">▽</span>
+            </button>
+            <div id="player-content" class="dropdown-content">
+                <label class="checkbox-item rainbow-text"><input type="checkbox"> Fast Build</label>
+                <label class="checkbox-item rainbow-text"><input type="checkbox"> Unlitimate Population</label>
+            </div>
+        </div>
+
+        <!-- 4. Enemy -->
+        <div class="menu-item">
+            <button class="menu-btn rainbow-text" onclick="toggleDropdown('enemy-content')">
+                <span class="arrow">▽</span> ENEMY <span class="arrow">▽</span>
+            </button>
+            <div id="enemy-content" class="dropdown-content">
+                <label class="checkbox-item rainbow-text"><input type="checkbox"> Fast Build</label>
+                <label class="checkbox-item rainbow-text"><input type="checkbox"> Unlitimate Population</label>
+            </div>
+        </div>
+
+        <!-- 5. Game Manager (Mới) -->
+        <div class="menu-item">
+            <button class="menu-btn rainbow-text" onclick="toggleDropdown('gamemanager-content')">
+                <span class="arrow">▽</span> GAME MANAGER <span class="arrow">▽</span>
+            </button>
+            <div id="gamemanager-content" class="dropdown-content">
+                <label class="checkbox-item rainbow-text"><input type="checkbox"> Control Zombie</label>
+                <label class="checkbox-item rainbow-text"><input type="checkbox"> Auto Win</label>
+                <label class="checkbox-item rainbow-text"><input type="checkbox"> Kill enemy</label>
+                <label class="checkbox-item rainbow-text"><input type="checkbox"> Kill Player</label>
+            </div>
+        </div>
+
+        <!-- 6. Spell (Mới) -->
+        <div class="menu-item">
+            <button class="menu-btn rainbow-text" onclick="toggleDropdown('spell-content')">
+                <span class="arrow">▽</span> SPELL <span class="arrow">▽</span>
+            </button>
+            <div id="spell-content" class="dropdown-content">
+                <div class="select-group">
+                    <select id="spell-select">
+                        <option value="SwordWrath Rage">SwordWrath Rage</option>
+                        <option value="Spearton Rage">Spearton Rage</option>
+                        <option value="Rain Heath">Rain Heath</option>
+                        <option value="Meric">Meric</option>
+                        <option value="Archidon Rain">Archidon Rain</option>
+                        <option value="Gold Spearton">Gold Spearton</option>
+                        <option value="Gold Archer">Gold Archer</option>
+                    </select>
+                </div>
+                <button class="action-btn rainbow-text">Spawn Spell</button>
+            </div>
+        </div>
+
+        <!-- 7. Statue (Mới) -->
+        <div class="menu-item">
+            <button class="menu-btn rainbow-text" onclick="toggleDropdown('statue-content')">
+                <span class="arrow">▽</span> STATUE <span class="arrow">▽</span>
+            </button>
+            <div id="statue-content" class="dropdown-content">
+                <label class="checkbox-item rainbow-text"><input type="checkbox"> Statue Unlitimate Heath</label>
+                <label class="checkbox-item rainbow-text"><input type="checkbox"> Statue laser eyes</label>
+            </div>
+        </div>
+
+        <!-- 8. Gems -->
+        <div class="menu-item">
+            <button class="menu-btn rainbow-text" onclick="toggleDropdown('gems-content')">
+                <span class="arrow">▽</span> GEMS <span class="arrow">▽</span>
+            </button>
+            <div id="gems-content" class="dropdown-content">
+                <div class="slider-group">
+                    <label class="rainbow-text" style="font-weight: bold; font-size: 1.125em;">Gems Amount</label>
+                    <input type="range" id="gemsSlider" min="1" max="1000000" value="1000">
+                    <span id="gemsDisplay" class="rainbow-text" style="font-weight: bold; font-size: 1em;">1,000</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 9. TikTok -->
+        <a href="https://www.tiktok.com/@nullrarely" target="_blank" class="tiktok-btn rainbow-text">TikTok</a>
+    </div>
+
+    <!-- Phần Letter -->
+    <div id="letter-section">
+        <div class="letter-header">
+            <button class="close-btn" onclick="closeLetterMode()">✖</button>
+        </div>
+        <div class="letter-content">
+            <div class="letter-title rainbow-text">LETTER</div>
+            <div class="slider-group">
+                <label class="rainbow-text" style="font-weight: bold; font-size: 1.125em;">Letter Size</label>
+                <input type="range" id="fontSizeSlider" min="8" max="50" value="16">
+                <span id="sizeDisplay" class="rainbow-text" style="font-weight: bold; font-size: 1em;">16px</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <div class="footer-text rainbow-text">HACK DISABLED</div>
+        <div class="footer-text rainbow-text">HACK ENABLED</div>
+    </div>
+
+</div>
+
+<script>
+    function toggleDropdown(contentId) {
+        var content = document.getElementById(contentId);
+        var button = content.previousElementSibling;
+
+        if (content.classList.contains('show')) {
+            content.classList.remove('show');
+            button.classList.remove('active');
+        } else {
+            content.classList.add('show');
+            button.classList.add('active');
+        }
+    }
+
+    function toggleLetterMode() {
+        document.getElementById('main-menu-items').style.display = 'none';
+        document.getElementById('letter-section').classList.add('show');
+    }
+
+    function closeLetterMode() {
+        document.getElementById('letter-section').classList.remove('show');
+        document.getElementById('main-menu-items').style.display = 'flex';
+    }
+
+    // Xử lý thanh trượt thay đổi cỡ chữ TOÀN BỘ MENU
+    document.addEventListener('DOMContentLoaded', function() {
+        var slider = document.getElementById('fontSizeSlider');
+        var display = document.getElementById('sizeDisplay');
+        var root = document.documentElement;
+
+        slider.addEventListener('input', function() {
+            var size = this.value + 'px';
+            root.style.setProperty('--menu-font-size', size);
+            display.textContent = size;
+        });
+        
+        // Xử lý thanh trượt Gems Amount
+        var gemsSlider = document.getElementById('gemsSlider');
+        var gemsDisplay = document.getElementById('gemsDisplay');
+
+        gemsSlider.addEventListener('input', function() {
+            var value = parseInt(this.value).toLocaleString();
+            gemsDisplay.textContent = value;
+        });
+    });
+</script>
+
+</body>
+</html>
